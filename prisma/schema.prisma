@@ -35,6 +35,7 @@ model Question {
   type      QuestionType
   options   String[]     @default([])
   unit      String?
+  orderIndex Int          @default(0)
   active    Boolean      @default(true)
   responses Response[]
   createdAt DateTime     @default(now())

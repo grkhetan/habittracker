@@ -12,6 +12,7 @@
       <nav class="nav">
         <% if (user) { %>
           <a href="/dashboard" class="<%= path === '/dashboard' ? 'active' : '' %>">Daily log</a>
+          <a href="/history" class="<%= path === '/history' ? 'active' : '' %>">Trends</a>
           <% if (user.role === 'ADMIN') { %>
             <a href="/admin" class="<%= path.startsWith('/admin') ? 'active' : '' %>">Admin</a>
           <% } %>

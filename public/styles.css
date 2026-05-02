@@ -137,11 +137,121 @@ h2 {
 .date-controls,
 .date-picker,
 .actions,
-.row-actions {
+.row-actions,
+.heading-actions,
+.inline-form {
   align-items: center;
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
+}
+
+.date-panel {
+  align-items: center;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  box-shadow: 0 10px 28px rgba(31, 41, 51, 0.06);
+  display: grid;
+  gap: 10px;
+  grid-template-columns: 46px minmax(220px, 1fr) 46px auto;
+  margin: -6px 0 18px;
+  padding: 12px;
+}
+
+.date-panel .date-picker {
+  display: grid;
+  grid-template-columns: minmax(150px, 1fr) auto;
+}
+
+.icon-button {
+  align-items: center;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  color: var(--ink);
+  display: inline-flex;
+  font-size: 28px;
+  font-weight: 800;
+  height: 46px;
+  justify-content: center;
+  line-height: 1;
+  text-decoration: none;
+  width: 46px;
+}
+
+.icon-button:hover {
+  border-color: var(--accent);
+  text-decoration: none;
+}
+
+.summary-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-bottom: 14px;
+}
+
+.summary-card,
+.week-strip,
+.chart-card {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  box-shadow: 0 10px 28px rgba(31, 41, 51, 0.06);
+}
+
+.summary-card {
+  display: grid;
+  gap: 4px;
+  min-height: 92px;
+  padding: 18px;
+}
+
+.summary-value {
+  color: var(--accent);
+  font-size: 30px;
+  font-weight: 850;
+  line-height: 1;
+}
+
+.summary-label {
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.week-strip {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  margin-bottom: 20px;
+  padding: 10px;
+}
+
+.day-pill {
+  border: 1px solid transparent;
+  border-radius: 6px;
+  color: var(--muted);
+  display: grid;
+  font-size: 13px;
+  gap: 4px;
+  min-height: 58px;
+  padding: 8px;
+  text-align: center;
+}
+
+.day-pill strong {
+  color: var(--ink);
+  font-size: 15px;
+}
+
+.day-pill.complete {
+  background: #e8f5ec;
+}
+
+.day-pill.selected {
+  border-color: var(--accent);
 }
 
 .form {
@@ -192,6 +302,18 @@ button,
   min-height: 42px;
   padding: 10px 16px;
   text-decoration: none;
+}
+
+button:disabled,
+.secondary:disabled {
+  cursor: not-allowed;
+  opacity: 0.42;
+}
+
+.compact {
+  min-height: 36px;
+  min-width: 38px;
+  padding: 7px 10px;
 }
 
 .primary {
@@ -295,6 +417,83 @@ button,
   margin: 8px 0 0;
 }
 
+.admin-row > div:first-child {
+  min-width: 0;
+}
+
+.admin-row h2,
+.admin-row p {
+  overflow-wrap: anywhere;
+}
+
+.inline-form select {
+  min-width: 120px;
+}
+
+.chart-list {
+  display: grid;
+  gap: 16px;
+}
+
+.chart-card {
+  padding: 20px;
+}
+
+.chart-header {
+  align-items: start;
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.chart-header p {
+  margin: 8px 0 0;
+}
+
+.chart-scroll {
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.line-chart {
+  display: block;
+  min-width: 620px;
+  width: 100%;
+}
+
+.axis {
+  stroke: #c9d0ca;
+  stroke-width: 1;
+}
+
+.axis-label,
+.date-label {
+  fill: var(--muted);
+  font-size: 12px;
+}
+
+.chart-line {
+  fill: none;
+  stroke: var(--accent);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 3;
+}
+
+.chart-point {
+  fill: #fff;
+  stroke: var(--accent);
+  stroke-width: 3;
+}
+
+.sticky-actions {
+  background: linear-gradient(rgba(247, 247, 244, 0), var(--bg) 34%);
+  bottom: 0;
+  margin-top: 4px;
+  padding: 18px 0 0;
+  position: sticky;
+}
+
 .status {
   border-radius: 999px;
   font-size: 13px;
@@ -320,14 +519,91 @@ button,
     flex-direction: column;
   }
 
-  .date-controls,
-  .date-picker {
+  .topbar {
+    gap: 12px;
+    padding: 14px 16px;
+  }
+
+  .nav {
+    gap: 12px;
+  }
+
+  .page {
+    padding: 22px 14px 44px;
+  }
+
+  h1 {
+    font-size: 30px;
+  }
+
+  .date-panel {
+    grid-template-columns: 46px 1fr 46px;
+  }
+
+  .previous-day {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .next-day {
+    grid-column: 3;
+    grid-row: 1;
+  }
+
+  .date-panel .date-picker {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+
+  .today-button {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .summary-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .summary-card {
+    min-height: auto;
+  }
+
+  .week-strip {
+    grid-template-columns: repeat(7, minmax(72px, 1fr));
+    overflow-x: auto;
+  }
+
+  .row-actions,
+  .heading-actions,
+  .inline-form {
+    align-items: stretch;
+  }
+
+  .inline-form,
+  .inline-form select,
+  .inline-form button {
     width: 100%;
   }
 
-  .date-picker input,
-  .date-picker button,
-  .date-controls a {
+  .row-actions .secondary:not(.compact),
+  .heading-actions .secondary,
+  .heading-actions .primary {
     flex: 1;
+  }
+
+  .question-card,
+  .admin-row,
+  .form.wide,
+  .chart-card {
+    padding: 16px;
+  }
+
+  .segmented {
+    max-width: none;
+    width: 100%;
+  }
+
+  .sticky-actions .primary {
+    width: 100%;
   }
 }

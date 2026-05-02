@@ -5,17 +5,40 @@
     <p class="eyebrow">Daily log</p>
     <h1><%= displayDate %></h1>
   </div>
-  <div class="date-controls">
-    <a class="secondary" href="/dashboard?date=<%= previousDate %>">Previous</a>
-    <form action="/dashboard" method="get" class="date-picker">
-      <input type="date" name="date" value="<%= date %>">
-      <button class="secondary" type="submit">Go</button>
-    </form>
-    <a class="secondary" href="/dashboard?date=<%= nextDate %>">Next</a>
-    <% if (date !== today) { %>
-      <a class="secondary" href="/dashboard">Today</a>
-    <% } %>
-  </div>
+</section>
+
+<section class="date-panel">
+  <a class="icon-button previous-day" href="/dashboard?date=<%= previousDate %>" aria-label="Previous day">&lsaquo;</a>
+  <form action="/dashboard" method="get" class="date-picker">
+    <input type="date" name="date" value="<%= date %>" aria-label="Choose date">
+    <button class="secondary" type="submit">Go</button>
+  </form>
+  <a class="icon-button next-day" href="/dashboard?date=<%= nextDate %>" aria-label="Next day">&rsaquo;</a>
+  <a class="secondary today-button" href="/dashboard">Today</a>
+</section>
+
+<section class="summary-grid">
+  <article class="summary-card">
+    <span class="summary-value"><%= summary.answeredToday %>/<%= summary.activeQuestionCount %></span>
+    <span class="summary-label">answered today</span>
+  </article>
+  <article class="summary-card">
+    <span class="summary-value"><%= summary.streak %></span>
+    <span class="summary-label">day streak</span>
+  </article>
+  <article class="summary-card">
+    <span class="summary-value"><%= summary.missingDays %></span>
+    <span class="summary-label">incomplete days this week</span>
+  </article>
+</section>
+
+<section class="week-strip" aria-label="Last 7 days">
+  <% summary.lastSeven.forEach((day) => { %>
+    <a href="/dashboard?date=<%= day.date %>" class="day-pill <%= day.complete ? 'complete' : '' %> <%= day.date === date ? 'selected' : '' %>">
+      <span><%= day.shortLabel %></span>
+      <strong><%= day.count %>/<%= summary.activeQuestionCount %></strong>
+    </a>
+  <% }) %>
 </section>
 
 <% if (questions.length === 0) { %>
@@ -66,7 +89,7 @@
         <% } %>
       </section>
     <% }) %>
-    <div class="actions">
+    <div class="actions sticky-actions">
       <button class="primary" type="submit">Save daily log</button>
     </div>
   </form>

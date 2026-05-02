@@ -1,0 +1,32 @@
+<%- include('../partials/header') %>
+
+<section class="page-heading">
+  <div>
+    <p class="eyebrow">Admin</p>
+    <h1>Users</h1>
+  </div>
+  <a class="secondary" href="/admin">Questions</a>
+</section>
+
+<section class="admin-list">
+  <% users.forEach((account) => { %>
+    <article class="admin-row">
+      <div>
+        <h2><%= account.name %><% if (account.id === user.id) { %> <span class="muted">(you)</span><% } %></h2>
+        <p class="muted"><%= account._count.responses %> saved responses · joined <%= account.createdAt.toISOString().slice(0, 10) %></p>
+      </div>
+      <div class="row-actions">
+        <span class="status <%= account.role === 'ADMIN' ? 'on' : 'off' %>"><%= account.role.toLowerCase() %></span>
+        <form action="/admin/users/<%= account.id %>/role" method="post" class="inline-form">
+          <select name="role" aria-label="Role for <%= account.name %>">
+            <option value="USER" <%= account.role === 'USER' ? 'selected' : '' %>>user</option>
+            <option value="ADMIN" <%= account.role === 'ADMIN' ? 'selected' : '' %>>admin</option>
+          </select>
+          <button class="secondary" type="submit">Save</button>
+        </form>
+      </div>
+    </article>
+  <% }) %>
+</section>
+
+<%- include('../partials/footer') %>

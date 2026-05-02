@@ -1,0 +1,59 @@
+<%- include('partials/header') %>
+
+<section class="page-heading">
+  <div>
+    <p class="eyebrow">Trends</p>
+    <h1>Numeric history</h1>
+  </div>
+</section>
+
+<% if (charts.length === 0) { %>
+  <section class="empty-state">
+    <h2>No numeric questions yet</h2>
+    <p class="muted">Add a number question, such as weight, to see trends here.</p>
+  </section>
+<% } else { %>
+  <section class="chart-list">
+    <% charts.forEach((chart) => { %>
+      <article class="chart-card">
+        <div class="chart-header">
+          <div>
+            <h2><%= chart.question.label %></h2>
+            <% if (chart.latest) { %>
+              <p class="muted">Latest: <strong><%= chart.latest.value %></strong><% if (chart.question.unit) { %> <%= chart.question.unit %><% } %> on <%= chart.latest.label %></p>
+            <% } else { %>
+              <p class="muted">No entries yet.</p>
+            <% } %>
+          </div>
+        </div>
+
+        <% if (chart.points.length > 0) { %>
+          <div class="chart-scroll">
+            <svg class="line-chart" viewBox="0 0 <%= chart.width %> <%= chart.height %>" role="img" aria-label="<%= chart.question.label %> trend chart">
+              <line x1="44" y1="18" x2="44" y2="182" class="axis"></line>
+              <line x1="44" y1="182" x2="662" y2="182" class="axis"></line>
+              <text x="8" y="24" class="axis-label"><%= chart.max.toFixed(1) %></text>
+              <text x="8" y="182" class="axis-label"><%= chart.min.toFixed(1) %></text>
+              <% if (chart.pathData) { %>
+                <path d="<%= chart.pathData %>" class="chart-line"></path>
+              <% } %>
+              <% chart.points.forEach((point) => { %>
+                <circle cx="<%= point.x %>" cy="<%= point.y %>" r="4.5" class="chart-point"></circle>
+              <% }) %>
+              <% if (chart.points[0]) { %>
+                <text x="<%= chart.points[0].x %>" y="210" class="date-label"><%= chart.points[0].label %></text>
+              <% } %>
+              <% if (chart.points.length > 1) { 
+                const lastPoint = chart.points[chart.points.length - 1];
+              %>
+                <text x="<%= lastPoint.x - 44 %>" y="210" class="date-label"><%= lastPoint.label %></text>
+              <% } %>
+            </svg>
+          </div>
+        <% } %>
+      </article>
+    <% }) %>
+  </section>
+<% } %>
+
+<%- include('partials/footer') %>

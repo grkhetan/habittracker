@@ -7,8 +7,10 @@ A small health habit tracking app with user registration, admin-managed daily qu
 - Users can register and log in with a name and password.
 - The first registered user is automatically made an admin.
 - Admins can create, edit, enable, and disable questions.
+- Admins can reorder questions and manage user roles.
 - Questions can be yes/no, multiple choice, text, or number.
 - Users can fill answers for today or navigate to previous/future dates.
+- Users can view numeric trend charts and a weekly completion summary.
 - Responses are stored in PostgreSQL with one answer per user, question, and date.
 
 ## Local Setup

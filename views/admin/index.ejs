@@ -5,7 +5,10 @@
     <p class="eyebrow">Admin</p>
     <h1>Questions</h1>
   </div>
-  <a class="primary" href="/admin/questions/new">Add question</a>
+  <div class="heading-actions">
+    <a class="secondary" href="/admin/users">Users</a>
+    <a class="primary" href="/admin/questions/new">Add question</a>
+  </div>
 </section>
 
 <% if (questions.length === 0) { %>
@@ -15,7 +18,7 @@
   </section>
 <% } else { %>
   <section class="admin-list">
-    <% questions.forEach((question) => { %>
+    <% questions.forEach((question, index) => { %>
       <article class="admin-row">
         <div>
           <h2><%= question.label %></h2>
@@ -27,6 +30,14 @@
         </div>
         <div class="row-actions">
           <span class="status <%= question.active ? 'on' : 'off' %>"><%= question.active ? 'Active' : 'Inactive' %></span>
+          <form action="/admin/questions/<%= question.id %>/move" method="post">
+            <input type="hidden" name="direction" value="up">
+            <button class="secondary compact" type="submit" <%= index === 0 ? 'disabled' : '' %> aria-label="Move question up">&uarr;</button>
+          </form>
+          <form action="/admin/questions/<%= question.id %>/move" method="post">
+            <input type="hidden" name="direction" value="down">
+            <button class="secondary compact" type="submit" <%= index === questions.length - 1 ? 'disabled' : '' %> aria-label="Move question down">&darr;</button>
+          </form>
           <a class="secondary" href="/admin/questions/<%= question.id %>/edit">Edit</a>
           <form action="/admin/questions/<%= question.id %>/toggle" method="post">
             <button class="secondary" type="submit"><%= question.active ? 'Disable' : 'Enable' %></button>

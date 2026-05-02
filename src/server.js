@@ -141,7 +141,7 @@ app.get('/dashboard', requireAuth, async (req, res) => {
   const date = parseDateInput(req.query.date || todayString());
   const questions = await prisma.question.findMany({
     where: { active: true },
-    orderBy: { createdAt: 'asc' }
+    orderBy: [{ orderIndex: 'asc' }, { createdAt: 'asc' }]
   });
   const responses = await prisma.response.findMany({
     where: {
@@ -152,6 +152,7 @@ app.get('/dashboard', requireAuth, async (req, res) => {
   const responseByQuestion = new Map(
     responses.map((response) => [response.questionId, response])
   );
+  const summary = await getDashboardSummary(req.user.id, questions.length);
 
   res.render('dashboard', {
     title: 'Daily habits',
@@ -161,13 +162,17 @@ app.get('/dashboard', requireAuth, async (req, res) => {
     nextDate: shiftDate(date, 1),
     today: todayString(),
     questions,
-    responseByQuestion
+    responseByQuestion,
+    summary
   });
 });
 
 app.post('/responses', requireAuth, async (req, res) => {
   const date = parseDateInput(req.body.date || todayString());
-  const questions = await prisma.question.findMany({ where: { active: true } });
+  const questions = await prisma.question.findMany({
+    where: { active: true },
+    orderBy: [{ orderIndex: 'asc' }, { createdAt: 'asc' }]
+  });
 
   await Promise.all(
     questions.map(async (question) => {
@@ -207,9 +212,39 @@ app.post('/responses', requireAuth, async (req, res) => {
   res.redirect(`/dashboard?date=${date}`);
 });
 
+app.get('/history', requireAuth, async (req, res) => {
+  const numericQuestions = await prisma.question.findMany({
+    where: { type: 'NUMBER', active: true },
+    orderBy: [{ orderIndex: 'asc' }, { createdAt: 'asc' }]
+  });
+  const questionIds = numericQuestions.map((question) => question.id);
+  const since = dateForDb(shiftDate(todayString(), -89));
+  const responses =
+    questionIds.length === 0
+      ? []
+      : await prisma.response.findMany({
+          where: {
+            userId: req.user.id,
+            questionId: { in: questionIds },
+            valueNumber: { not: null },
+            answerDate: { gte: since }
+          },
+          orderBy: { answerDate: 'asc' }
+        });
+  const responsesByQuestion = groupByQuestionId(responses);
+  const charts = numericQuestions.map((question) =>
+    buildNumberChart(question, responsesByQuestion.get(question.id) || [])
+  );
+
+  res.render('history', {
+    title: 'Trends',
+    charts
+  });
+});
+
 app.get('/admin', requireAdmin, async (req, res) => {
   const questions = await prisma.question.findMany({
-    orderBy: { createdAt: 'asc' }
+    orderBy: [{ orderIndex: 'asc' }, { createdAt: 'asc' }]
   });
 
   res.render('admin/index', {
@@ -235,7 +270,15 @@ app.post('/admin/questions', requireAdmin, async (req, res) => {
     });
   }
 
-  await prisma.question.create({ data });
+  const lastQuestion = await prisma.question.findFirst({
+    orderBy: [{ orderIndex: 'desc' }, { createdAt: 'desc' }]
+  });
+  await prisma.question.create({
+    data: {
+      ...data,
+      orderIndex: (lastQuestion?.orderIndex || 0) + 10
+    }
+  });
   res.redirect('/admin');
 });
 
@@ -281,6 +324,76 @@ app.post('/admin/questions/:id/toggle', requireAdmin, async (req, res) => {
   res.redirect('/admin');
 });
 
+app.post('/admin/questions/:id/move', requireAdmin, async (req, res) => {
+  const direction = req.body.direction === 'down' ? 'down' : 'up';
+  const questions = await prisma.question.findMany({
+    orderBy: [{ orderIndex: 'asc' }, { createdAt: 'asc' }]
+  });
+  const index = questions.findIndex((question) => question.id === req.params.id);
+  const swapIndex = direction === 'up' ? index - 1 : index + 1;
+
+  if (index >= 0 && swapIndex >= 0 && swapIndex < questions.length) {
+    const current = questions[index];
+    const other = questions[swapIndex];
+    await prisma.$transaction([
+      prisma.question.update({
+        where: { id: current.id },
+        data: { orderIndex: other.orderIndex }
+      }),
+      prisma.question.update({
+        where: { id: other.id },
+        data: { orderIndex: current.orderIndex }
+      })
+    ]);
+  }
+
+  res.redirect('/admin');
+});
+
+app.get('/admin/users', requireAdmin, async (req, res) => {
+  const users = await prisma.user.findMany({
+    include: {
+      _count: {
+        select: { responses: true }
+      }
+    },
+    orderBy: { createdAt: 'asc' }
+  });
+
+  res.render('admin/users', {
+    title: 'Users',
+    users
+  });
+});
+
+app.post('/admin/users/:id/role', requireAdmin, async (req, res) => {
+  const nextRole = req.body.role === 'ADMIN' ? 'ADMIN' : 'USER';
+  const targetUser = await prisma.user.findUnique({
+    where: { id: req.params.id }
+  });
+
+  if (!targetUser) {
+    return res.redirect('/admin/users');
+  }
+
+  if (targetUser.role === 'ADMIN' && nextRole === 'USER') {
+    const adminCount = await prisma.user.count({ where: { role: 'ADMIN' } });
+    if (adminCount <= 1) {
+      return res.status(400).render('error', {
+        title: 'Cannot update role',
+        message: 'At least one admin account must remain.'
+      });
+    }
+  }
+
+  await prisma.user.update({
+    where: { id: targetUser.id },
+    data: { role: nextRole }
+  });
+
+  res.redirect('/admin/users');
+});
+
 app.use((req, res) => {
   res.status(404).render('error', {
     title: 'Not found',
@@ -304,6 +417,137 @@ function questionDataFromBody(body) {
     unit: (body.unit || '').trim() || null,
     options
   };
+}
+
+async function getDashboardSummary(userId, activeQuestionCount) {
+  const today = todayString();
+  const lastSevenDays = Array.from({ length: 7 }, (_, index) =>
+    shiftDate(today, index - 6)
+  );
+  const since = dateForDb(lastSevenDays[0]);
+  const recentResponses = await prisma.response.findMany({
+    where: {
+      userId,
+      answerDate: { gte: since }
+    },
+    select: {
+      answerDate: true,
+      questionId: true
+    }
+  });
+  const responseCounts = countResponsesByDate(recentResponses);
+  const lastSeven = lastSevenDays.map((date) => ({
+    date,
+    shortLabel: formatShortDate(date),
+    count: responseCounts.get(date) || 0,
+    complete:
+      activeQuestionCount > 0 && (responseCounts.get(date) || 0) >= activeQuestionCount
+  }));
+
+  return {
+    activeQuestionCount,
+    answeredToday: responseCounts.get(today) || 0,
+    lastSeven,
+    missingDays: lastSeven.filter((day) => !day.complete).length,
+    streak: await getCurrentStreak(userId)
+  };
+}
+
+async function getCurrentStreak(userId) {
+  const since = dateForDb(shiftDate(todayString(), -364));
+  const responses = await prisma.response.findMany({
+    where: {
+      userId,
+      answerDate: { gte: since }
+    },
+    select: { answerDate: true },
+    distinct: ['answerDate']
+  });
+  const loggedDates = new Set(
+    responses.map((response) => response.answerDate.toISOString().slice(0, 10))
+  );
+  let streak = 0;
+  let cursor = todayString();
+
+  for (let index = 0; index < 365; index += 1) {
+    if (!loggedDates.has(cursor)) {
+      break;
+    }
+
+    streak += 1;
+    cursor = shiftDate(cursor, -1);
+  }
+
+  return streak;
+}
+
+function countResponsesByDate(responses) {
+  const counts = new Map();
+  responses.forEach((response) => {
+    const date = response.answerDate.toISOString().slice(0, 10);
+    counts.set(date, (counts.get(date) || 0) + 1);
+  });
+  return counts;
+}
+
+function groupByQuestionId(responses) {
+  const groups = new Map();
+  responses.forEach((response) => {
+    const existing = groups.get(response.questionId) || [];
+    existing.push(response);
+    groups.set(response.questionId, existing);
+  });
+  return groups;
+}
+
+function buildNumberChart(question, responses) {
+  const points = responses.map((response) => ({
+    date: response.answerDate.toISOString().slice(0, 10),
+    label: formatShortDate(response.answerDate.toISOString().slice(0, 10)),
+    value: response.valueNumber
+  }));
+  const values = points.map((point) => point.value);
+  const min = values.length ? Math.min(...values) : 0;
+  const max = values.length ? Math.max(...values) : 0;
+  const paddedMin = min === max ? min - 1 : min;
+  const paddedMax = min === max ? max + 1 : max;
+  const width = 680;
+  const height = 220;
+  const left = 44;
+  const right = 18;
+  const top = 18;
+  const bottom = 38;
+  const plotWidth = width - left - right;
+  const plotHeight = height - top - bottom;
+  const svgPoints = points.map((point, index) => {
+    const x =
+      left + (points.length <= 1 ? plotWidth / 2 : (index / (points.length - 1)) * plotWidth);
+    const y =
+      top + plotHeight - ((point.value - paddedMin) / (paddedMax - paddedMin)) * plotHeight;
+    return { ...point, x, y };
+  });
+  const pathData = svgPoints
+    .map((point, index) => `${index === 0 ? 'M' : 'L'} ${point.x.toFixed(1)} ${point.y.toFixed(1)}`)
+    .join(' ');
+
+  return {
+    question,
+    points: svgPoints,
+    pathData,
+    min: paddedMin,
+    max: paddedMax,
+    latest: points[points.length - 1] || null,
+    width,
+    height
+  };
+}
+
+function formatShortDate(value) {
+  return dateForDb(value).toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    timeZone: 'UTC'
+  });
 }
 
 function valueForQuestion(question, rawValue) {

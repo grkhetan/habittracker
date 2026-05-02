@@ -1,0 +1,19 @@
+<%- include('partials/header') %>
+
+<section class="auth-panel">
+  <h1>Log in</h1>
+  <form class="form" action="/login" method="post">
+    <label>
+      Name
+      <input name="name" autocomplete="username" required>
+    </label>
+    <label>
+      Password
+      <input name="password" type="password" autocomplete="current-password" required>
+    </label>
+    <button class="primary" type="submit">Log in</button>
+  </form>
+  <p class="muted">New here? <a href="/register">Create an account</a>.</p>
+</section>
+
+<%- include('partials/footer') %>

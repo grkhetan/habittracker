@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title><%= title %> · Habit Tracker</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand" href="<%= user ? '/dashboard' : '/login' %>">Habit Tracker</a>
+      <nav class="nav">
+        <% if (user) { %>
+          <a href="/dashboard" class="<%= path === '/dashboard' ? 'active' : '' %>">Daily log</a>
+          <% if (user.role === 'ADMIN') { %>
+            <a href="/admin" class="<%= path.startsWith('/admin') ? 'active' : '' %>">Admin</a>
+          <% } %>
+          <form action="/logout" method="post">
+            <button class="link-button" type="submit">Log out</button>
+          </form>
+        <% } else { %>
+          <a href="/login" class="<%= path === '/login' ? 'active' : '' %>">Log in</a>
+          <a href="/register" class="<%= path === '/register' ? 'active' : '' %>">Register</a>
+        <% } %>
+      </nav>
+    </header>
+    <main class="page">
+      <% if (typeof error !== 'undefined' && error) { %>
+        <div class="notice error"><%= error %></div>
+      <% } %>
+      <% if (typeof success !== 'undefined' && success) { %>
+        <div class="notice success"><%= success %></div>
+      <% } %>

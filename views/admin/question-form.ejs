@@ -1,0 +1,41 @@
+<%- include('../partials/header') %>
+
+<section class="page-heading">
+  <div>
+    <p class="eyebrow">Admin</p>
+    <h1><%= question && question.id ? 'Edit question' : 'New question' %></h1>
+  </div>
+</section>
+
+<form class="form wide" action="<%= question && question.id ? '/admin/questions/' + question.id : '/admin/questions' %>" method="post">
+  <label>
+    Question
+    <input name="label" value="<%= question ? question.label : '' %>" required>
+  </label>
+
+  <label>
+    Answer type
+    <select name="type">
+      <% ['YES_NO', 'MULTIPLE_CHOICE', 'TEXT', 'NUMBER'].forEach((type) => { %>
+        <option value="<%= type %>" <%= question && question.type === type ? 'selected' : '' %>><%= type.replaceAll('_', ' ').toLowerCase() %></option>
+      <% }) %>
+    </select>
+  </label>
+
+  <label>
+    Unit
+    <input name="unit" placeholder="kg, minutes, glasses" value="<%= question && question.unit ? question.unit : '' %>">
+  </label>
+
+  <label>
+    Multiple choice options
+    <textarea name="options" rows="5" placeholder="One option per line"><%= question && question.options ? question.options.join('\n') : '' %></textarea>
+  </label>
+
+  <div class="actions">
+    <button class="primary" type="submit">Save question</button>
+    <a class="secondary" href="/admin">Cancel</a>
+  </div>
+</form>
+
+<%- include('../partials/footer') %>

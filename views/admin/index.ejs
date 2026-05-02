@@ -1,0 +1,40 @@
+<%- include('../partials/header') %>
+
+<section class="page-heading">
+  <div>
+    <p class="eyebrow">Admin</p>
+    <h1>Questions</h1>
+  </div>
+  <a class="primary" href="/admin/questions/new">Add question</a>
+</section>
+
+<% if (questions.length === 0) { %>
+  <section class="empty-state">
+    <h2>No questions yet</h2>
+    <p class="muted">Create the first health habit question.</p>
+  </section>
+<% } else { %>
+  <section class="admin-list">
+    <% questions.forEach((question) => { %>
+      <article class="admin-row">
+        <div>
+          <h2><%= question.label %></h2>
+          <p class="muted">
+            <%= question.type.replaceAll('_', ' ').toLowerCase() %>
+            <% if (question.unit) { %> · <%= question.unit %><% } %>
+            <% if (question.options.length) { %> · <%= question.options.join(', ') %><% } %>
+          </p>
+        </div>
+        <div class="row-actions">
+          <span class="status <%= question.active ? 'on' : 'off' %>"><%= question.active ? 'Active' : 'Inactive' %></span>
+          <a class="secondary" href="/admin/questions/<%= question.id %>/edit">Edit</a>
+          <form action="/admin/questions/<%= question.id %>/toggle" method="post">
+            <button class="secondary" type="submit"><%= question.active ? 'Disable' : 'Enable' %></button>
+          </form>
+        </div>
+      </article>
+    <% }) %>
+  </section>
+<% } %>
+
+<%- include('../partials/footer') %>

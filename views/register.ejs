@@ -1,0 +1,19 @@
+<%- include('partials/header') %>
+
+<section class="auth-panel">
+  <h1>Create account</h1>
+  <form class="form" action="/register" method="post">
+    <label>
+      Name
+      <input name="name" autocomplete="username" required>
+    </label>
+    <label>
+      Password
+      <input name="password" type="password" autocomplete="new-password" minlength="8" required>
+    </label>
+    <button class="primary" type="submit">Register</button>
+  </form>
+  <p class="muted">The first account created becomes the admin.</p>
+</section>
+
+<%- include('partials/footer') %>

@@ -1,0 +1,75 @@
+<%- include('partials/header') %>
+
+<section class="page-heading">
+  <div>
+    <p class="eyebrow">Daily log</p>
+    <h1><%= displayDate %></h1>
+  </div>
+  <div class="date-controls">
+    <a class="secondary" href="/dashboard?date=<%= previousDate %>">Previous</a>
+    <form action="/dashboard" method="get" class="date-picker">
+      <input type="date" name="date" value="<%= date %>">
+      <button class="secondary" type="submit">Go</button>
+    </form>
+    <a class="secondary" href="/dashboard?date=<%= nextDate %>">Next</a>
+    <% if (date !== today) { %>
+      <a class="secondary" href="/dashboard">Today</a>
+    <% } %>
+  </div>
+</section>
+
+<% if (questions.length === 0) { %>
+  <section class="empty-state">
+    <h2>No questions yet</h2>
+    <p class="muted">Ask an admin to add the first daily question.</p>
+  </section>
+<% } else { %>
+  <form class="question-list" action="/responses" method="post">
+    <input type="hidden" name="date" value="<%= date %>">
+    <% questions.forEach((question) => { 
+      const response = responseByQuestion.get(question.id);
+    %>
+      <section class="question-card">
+        <label class="question-label" for="question_<%= question.id %>">
+          <%= question.label %>
+          <% if (question.unit) { %><span class="unit">(<%= question.unit %>)</span><% } %>
+        </label>
+
+        <% if (question.type === 'YES_NO') { %>
+          <div class="segmented">
+            <label>
+              <input type="radio" name="question_<%= question.id %>" value="yes" <%= response && response.valueBoolean === true ? 'checked' : '' %>>
+              <span>Yes</span>
+            </label>
+            <label>
+              <input type="radio" name="question_<%= question.id %>" value="no" <%= response && response.valueBoolean === false ? 'checked' : '' %>>
+              <span>No</span>
+            </label>
+          </div>
+        <% } %>
+
+        <% if (question.type === 'MULTIPLE_CHOICE') { %>
+          <select id="question_<%= question.id %>" name="question_<%= question.id %>">
+            <option value="">Choose one</option>
+            <% question.options.forEach((option) => { %>
+              <option value="<%= option %>" <%= response && response.valueText === option ? 'selected' : '' %>><%= option %></option>
+            <% }) %>
+          </select>
+        <% } %>
+
+        <% if (question.type === 'TEXT') { %>
+          <textarea id="question_<%= question.id %>" name="question_<%= question.id %>" rows="3"><%= response && response.valueText ? response.valueText : '' %></textarea>
+        <% } %>
+
+        <% if (question.type === 'NUMBER') { %>
+          <input id="question_<%= question.id %>" name="question_<%= question.id %>" type="number" step="any" value="<%= response && response.valueNumber !== null ? response.valueNumber : '' %>">
+        <% } %>
+      </section>
+    <% }) %>
+    <div class="actions">
+      <button class="primary" type="submit">Save daily log</button>
+    </div>
+  </form>
+<% } %>
+
+<%- include('partials/footer') %>

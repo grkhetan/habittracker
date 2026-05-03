@@ -213,12 +213,25 @@ app.post('/responses', requireAuth, async (req, res) => {
 });
 
 app.get('/history', requireAuth, async (req, res) => {
-  const numericQuestions = await prisma.question.findMany({
-    where: { type: 'NUMBER', active: true },
+  const weekOffset = Math.max(0, Number.parseInt(req.query.offset || '0', 10) || 0);
+  const windowEnd = shiftDate(todayString(), weekOffset * -7);
+  const windowStart = shiftDate(windowEnd, -34);
+  const trendWindow = {
+    start: windowStart,
+    end: windowEnd,
+    label: `${formatShortDate(windowStart)} - ${formatShortDate(windowEnd)}`,
+    offset: weekOffset,
+    olderOffset: weekOffset + 1,
+    newerOffset: Math.max(0, weekOffset - 1),
+    canGoNewer: weekOffset > 0
+  };
+  const trendQuestions = await prisma.question.findMany({
+    where: { type: { in: ['NUMBER', 'YES_NO'] }, active: true },
     orderBy: [{ orderIndex: 'asc' }, { createdAt: 'asc' }]
   });
-  const questionIds = numericQuestions.map((question) => question.id);
-  const since = dateForDb(shiftDate(todayString(), -89));
+  const numericQuestions = trendQuestions.filter((question) => question.type === 'NUMBER');
+  const yesNoQuestions = trendQuestions.filter((question) => question.type === 'YES_NO');
+  const questionIds = trendQuestions.map((question) => question.id);
   const responses =
     questionIds.length === 0
       ? []
@@ -226,19 +239,32 @@ app.get('/history', requireAuth, async (req, res) => {
           where: {
             userId: req.user.id,
             questionId: { in: questionIds },
-            valueNumber: { not: null },
-            answerDate: { gte: since }
+            answerDate: {
+              gte: dateForDb(windowStart),
+              lte: dateForDb(windowEnd)
+            }
           },
           orderBy: { answerDate: 'asc' }
         });
   const responsesByQuestion = groupByQuestionId(responses);
   const charts = numericQuestions.map((question) =>
-    buildNumberChart(question, responsesByQuestion.get(question.id) || [])
+    buildNumberChart(
+      question,
+      (responsesByQuestion.get(question.id) || []).filter(
+        (response) => response.valueNumber !== null
+      ),
+      trendWindow
+    )
+  );
+  const habitCalendars = yesNoQuestions.map((question) =>
+    buildYesNoCalendar(question, responsesByQuestion.get(question.id) || [], trendWindow)
   );
 
   res.render('history', {
     title: 'Trends',
-    charts
+    charts,
+    habitCalendars,
+    trendWindow
   });
 });
 
@@ -500,7 +526,7 @@ function groupByQuestionId(responses) {
   return groups;
 }
 
-function buildNumberChart(question, responses) {
+function buildNumberChart(question, responses, trendWindow) {
   const points = responses.map((response) => ({
     date: response.answerDate.toISOString().slice(0, 10),
     label: formatShortDate(response.answerDate.toISOString().slice(0, 10)),
@@ -539,6 +565,48 @@ function buildNumberChart(question, responses) {
     latest: points[points.length - 1] || null,
     width,
     height
+  };
+}
+
+function buildYesNoCalendar(question, responses, trendWindow) {
+  const responseByDate = new Map(
+    responses.map((response) => [
+      response.answerDate.toISOString().slice(0, 10),
+      response.valueBoolean
+    ])
+  );
+  const days = Array.from({ length: 35 }, (_, index) => {
+    const date = shiftDate(trendWindow.start, index);
+    const value = responseByDate.get(date);
+    return {
+      date,
+      label: formatShortDate(date),
+      value,
+      state: value === true ? 'yes' : value === false ? 'no' : 'empty'
+    };
+  });
+  const yesCount = days.filter((day) => day.value === true).length;
+  const noCount = days.filter((day) => day.value === false).length;
+  const answeredCount = yesCount + noCount;
+  const yesRate = answeredCount ? Math.round((yesCount / answeredCount) * 100) : 0;
+  const weeks = [];
+
+  for (let index = 0; index < days.length; index += 7) {
+    const weekDays = days.slice(index, index + 7);
+    weeks.push({
+      label: `${weekDays[0].label} - ${weekDays[weekDays.length - 1].label}`,
+      days: weekDays
+    });
+  }
+
+  return {
+    question,
+    days,
+    weeks,
+    yesCount,
+    noCount,
+    answeredCount,
+    yesRate
   };
 }
 

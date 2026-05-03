@@ -3,57 +3,114 @@
 <section class="page-heading">
   <div>
     <p class="eyebrow">Trends</p>
-    <h1>Numeric history</h1>
+    <h1>Habit history</h1>
+  </div>
+  <div class="trend-controls" aria-label="Trend date range">
+    <a class="icon-button" href="/history?offset=<%= trendWindow.olderOffset %>" aria-label="Move one week older">&lsaquo;</a>
+    <span class="trend-range"><%= trendWindow.label %></span>
+    <% if (trendWindow.canGoNewer) { %>
+      <a class="icon-button" href="/history?offset=<%= trendWindow.newerOffset %>" aria-label="Move one week newer">&rsaquo;</a>
+    <% } else { %>
+      <span class="icon-button disabled" aria-disabled="true">&rsaquo;</span>
+    <% } %>
   </div>
 </section>
 
-<% if (charts.length === 0) { %>
+<% if (habitCalendars.length === 0 && charts.length === 0) { %>
   <section class="empty-state">
-    <h2>No numeric questions yet</h2>
-    <p class="muted">Add a number question, such as weight, to see trends here.</p>
+    <h2>No trend questions yet</h2>
+    <p class="muted">Add yes/no or number questions to see trends here.</p>
   </section>
 <% } else { %>
-  <section class="chart-list">
-    <% charts.forEach((chart) => { %>
-      <article class="chart-card">
-        <div class="chart-header">
-          <div>
-            <h2><%= chart.question.label %></h2>
-            <% if (chart.latest) { %>
-              <p class="muted">Latest: <strong><%= chart.latest.value %></strong><% if (chart.question.unit) { %> <%= chart.question.unit %><% } %> on <%= chart.latest.label %></p>
-            <% } else { %>
-              <p class="muted">No entries yet.</p>
-            <% } %>
-          </div>
-        </div>
-
-        <% if (chart.points.length > 0) { %>
-          <div class="chart-scroll">
-            <svg class="line-chart" viewBox="0 0 <%= chart.width %> <%= chart.height %>" role="img" aria-label="<%= chart.question.label %> trend chart">
-              <line x1="44" y1="18" x2="44" y2="182" class="axis"></line>
-              <line x1="44" y1="182" x2="662" y2="182" class="axis"></line>
-              <text x="8" y="24" class="axis-label"><%= chart.max.toFixed(1) %></text>
-              <text x="8" y="182" class="axis-label"><%= chart.min.toFixed(1) %></text>
-              <% if (chart.pathData) { %>
-                <path d="<%= chart.pathData %>" class="chart-line"></path>
-              <% } %>
-              <% chart.points.forEach((point) => { %>
-                <circle cx="<%= point.x %>" cy="<%= point.y %>" r="4.5" class="chart-point"></circle>
+  <% if (habitCalendars.length > 0) { %>
+    <section class="section-block">
+      <div class="section-heading">
+        <h2>Yes/no habits</h2>
+        <p class="muted">5 weeks</p>
+      </div>
+      <div class="chart-list">
+        <% habitCalendars.forEach((calendar) => { %>
+          <article class="chart-card">
+            <div class="chart-header">
+              <div>
+                <h2><%= calendar.question.label %></h2>
+                <p class="muted"><%= calendar.yesCount %> yes · <%= calendar.noCount %> no · <%= calendar.yesRate %>% yes when answered</p>
+              </div>
+            </div>
+            <div class="habit-legend" aria-hidden="true">
+              <span><i class="dot yes"></i> Yes</span>
+              <span><i class="dot no"></i> No</span>
+              <span><i class="dot empty"></i> Missing</span>
+            </div>
+            <div class="habit-calendar" role="list" aria-label="<%= calendar.question.label %> yes no history">
+              <% calendar.weeks.forEach((week) => { %>
+                <div class="habit-week" role="group" aria-label="<%= week.label %>">
+                  <span class="week-label"><%= week.label %></span>
+                  <div class="week-days">
+                    <% week.days.forEach((day) => { %>
+                      <a class="habit-day <%= day.state %>" href="/dashboard?date=<%= day.date %>" role="listitem" aria-label="<%= day.label %>: <%= day.state === 'yes' ? 'Yes' : day.state === 'no' ? 'No' : 'Missing' %>" title="<%= day.label %>: <%= day.state === 'yes' ? 'Yes' : day.state === 'no' ? 'No' : 'Missing' %>">
+                        <span><%= day.label %></span>
+                      </a>
+                    <% }) %>
+                  </div>
+                </div>
               <% }) %>
-              <% if (chart.points[0]) { %>
-                <text x="<%= chart.points[0].x %>" y="210" class="date-label"><%= chart.points[0].label %></text>
-              <% } %>
-              <% if (chart.points.length > 1) { 
-                const lastPoint = chart.points[chart.points.length - 1];
-              %>
-                <text x="<%= lastPoint.x - 44 %>" y="210" class="date-label"><%= lastPoint.label %></text>
-              <% } %>
-            </svg>
-          </div>
-        <% } %>
-      </article>
-    <% }) %>
-  </section>
+            </div>
+          </article>
+        <% }) %>
+      </div>
+    </section>
+  <% } %>
+
+  <% if (charts.length > 0) { %>
+    <section class="section-block">
+      <div class="section-heading">
+        <h2>Number trends</h2>
+        <p class="muted">5 weeks</p>
+      </div>
+      <div class="chart-list">
+        <% charts.forEach((chart) => { %>
+          <article class="chart-card">
+            <div class="chart-header">
+              <div>
+                <h2><%= chart.question.label %></h2>
+                <% if (chart.latest) { %>
+                  <p class="muted">Latest: <strong><%= chart.latest.value %></strong><% if (chart.question.unit) { %> <%= chart.question.unit %><% } %> on <%= chart.latest.label %></p>
+                <% } else { %>
+                  <p class="muted">No entries yet.</p>
+                <% } %>
+              </div>
+            </div>
+
+            <% if (chart.points.length > 0) { %>
+              <div class="chart-scroll">
+                <svg class="line-chart" viewBox="0 0 <%= chart.width %> <%= chart.height %>" role="img" aria-label="<%= chart.question.label %> trend chart">
+                  <line x1="44" y1="18" x2="44" y2="182" class="axis"></line>
+                  <line x1="44" y1="182" x2="662" y2="182" class="axis"></line>
+                  <text x="8" y="24" class="axis-label"><%= chart.max.toFixed(1) %></text>
+                  <text x="8" y="182" class="axis-label"><%= chart.min.toFixed(1) %></text>
+                  <% if (chart.pathData) { %>
+                    <path d="<%= chart.pathData %>" class="chart-line"></path>
+                  <% } %>
+                  <% chart.points.forEach((point) => { %>
+                    <circle cx="<%= point.x %>" cy="<%= point.y %>" r="4.5" class="chart-point"></circle>
+                  <% }) %>
+                  <% if (chart.points[0]) { %>
+                    <text x="<%= chart.points[0].x %>" y="210" class="date-label"><%= chart.points[0].label %></text>
+                  <% } %>
+                  <% if (chart.points.length > 1) { 
+                    const lastPoint = chart.points[chart.points.length - 1];
+                  %>
+                    <text x="<%= lastPoint.x - 44 %>" y="210" class="date-label"><%= lastPoint.label %></text>
+                  <% } %>
+                </svg>
+              </div>
+            <% } %>
+          </article>
+        <% }) %>
+      </div>
+    </section>
+  <% } %>
 <% } %>
 
 <%- include('partials/footer') %>

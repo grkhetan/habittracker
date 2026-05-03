@@ -185,6 +185,30 @@ h2 {
   text-decoration: none;
 }
 
+.icon-button.disabled {
+  color: var(--muted);
+  cursor: not-allowed;
+  opacity: 0.42;
+}
+
+.trend-controls {
+  align-items: center;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  display: grid;
+  gap: 10px;
+  grid-template-columns: 46px minmax(150px, auto) 46px;
+  padding: 8px;
+}
+
+.trend-range {
+  color: var(--ink);
+  font-weight: 800;
+  text-align: center;
+  white-space: nowrap;
+}
+
 .summary-grid {
   display: grid;
   gap: 12px;
@@ -435,6 +459,22 @@ button:disabled,
   gap: 16px;
 }
 
+.section-block {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.section-heading {
+  align-items: end;
+  display: flex;
+  justify-content: space-between;
+}
+
+.section-heading p {
+  margin: 0;
+}
+
 .chart-card {
   padding: 20px;
 }
@@ -484,6 +524,96 @@ button:disabled,
   fill: #fff;
   stroke: var(--accent);
   stroke-width: 3;
+}
+
+.habit-legend {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin: -2px 0 14px;
+}
+
+.habit-legend span {
+  align-items: center;
+  color: var(--muted);
+  display: inline-flex;
+  font-size: 13px;
+  font-weight: 750;
+  gap: 6px;
+}
+
+.dot {
+  border-radius: 999px;
+  display: inline-block;
+  height: 10px;
+  width: 10px;
+}
+
+.dot.yes,
+.habit-day.yes {
+  background: #2e6f45;
+}
+
+.dot.no,
+.habit-day.no {
+  background: #b94846;
+}
+
+.dot.empty,
+.habit-day.empty {
+  background: #e6e8e2;
+}
+
+.habit-calendar {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding: 2px 2px 8px;
+}
+
+.habit-week {
+  background: #fbfbf8;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  display: grid;
+  flex: 0 0 auto;
+  gap: 7px;
+  padding: 8px 10px 9px;
+}
+
+.week-label {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 750;
+  line-height: 1;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.week-days {
+  display: grid;
+  gap: 6px;
+  grid-template-columns: repeat(7, 17px);
+}
+
+.habit-day {
+  border: 1px solid rgba(31, 41, 51, 0.08);
+  border-radius: 999px;
+  display: block;
+  height: 17px;
+  min-width: 17px;
+  overflow: hidden;
+  text-indent: -999px;
+  transition: transform 120ms ease, box-shadow 120ms ease;
+  width: 17px;
+}
+
+.habit-day:hover,
+.habit-day:focus {
+  box-shadow: 0 0 0 3px rgba(215, 138, 61, 0.25);
+  outline: 0;
+  transform: scale(1.12);
 }
 
 .sticky-actions {
@@ -540,6 +670,15 @@ button:disabled,
     grid-template-columns: 46px 1fr 46px;
   }
 
+  .trend-controls {
+    grid-template-columns: 46px 1fr 46px;
+    width: 100%;
+  }
+
+  .trend-range {
+    font-size: 14px;
+  }
+
   .previous-day {
     grid-column: 1;
     grid-row: 1;
@@ -571,6 +710,33 @@ button:disabled,
   .week-strip {
     grid-template-columns: repeat(7, minmax(72px, 1fr));
     overflow-x: auto;
+  }
+
+  .section-heading {
+    align-items: start;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .habit-calendar {
+    gap: 9px;
+  }
+
+  .habit-week {
+    border-radius: 18px;
+    gap: 8px;
+    padding: 9px 10px 10px;
+  }
+
+  .week-days {
+    gap: 7px;
+    grid-template-columns: repeat(7, 18px);
+  }
+
+  .habit-day {
+    height: 18px;
+    min-width: 18px;
+    width: 18px;
   }
 
   .row-actions,

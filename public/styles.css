@@ -719,18 +719,22 @@ button:disabled,
   }
 
   .habit-calendar {
+    display: grid;
     gap: 9px;
+    overflow-x: visible;
   }
 
   .habit-week {
     border-radius: 18px;
     gap: 8px;
+    justify-self: stretch;
     padding: 9px 10px 10px;
   }
 
   .week-days {
     gap: 7px;
-    grid-template-columns: repeat(7, 18px);
+    grid-template-columns: repeat(7, minmax(18px, 1fr));
+    justify-items: center;
   }
 
   .habit-day {

@@ -138,7 +138,8 @@ app.post('/logout', (req, res) => {
 });
 
 app.get('/dashboard', requireAuth, async (req, res) => {
-  const date = parseDateInput(req.query.date || todayString());
+  const browserToday = getBrowserToday(req);
+  const date = parseDateInput(req.query.date || browserToday, browserToday);
   const questions = await prisma.question.findMany({
     where: { active: true },
     orderBy: [{ orderIndex: 'asc' }, { createdAt: 'asc' }]
@@ -152,7 +153,7 @@ app.get('/dashboard', requireAuth, async (req, res) => {
   const responseByQuestion = new Map(
     responses.map((response) => [response.questionId, response])
   );
-  const summary = await getDashboardSummary(req.user.id, questions.length);
+  const summary = await getDashboardSummary(req.user.id, questions.length, browserToday);
 
   res.render('dashboard', {
     title: 'Daily habits',
@@ -160,7 +161,7 @@ app.get('/dashboard', requireAuth, async (req, res) => {
     displayDate: formatLongDate(date),
     previousDate: shiftDate(date, -1),
     nextDate: shiftDate(date, 1),
-    today: todayString(),
+    today: browserToday,
     questions,
     responseByQuestion,
     summary
@@ -168,7 +169,8 @@ app.get('/dashboard', requireAuth, async (req, res) => {
 });
 
 app.post('/responses', requireAuth, async (req, res) => {
-  const date = parseDateInput(req.body.date || todayString());
+  const browserToday = getBrowserToday(req);
+  const date = parseDateInput(req.body.date || browserToday, browserToday);
   const questions = await prisma.question.findMany({
     where: { active: true },
     orderBy: [{ orderIndex: 'asc' }, { createdAt: 'asc' }]
@@ -213,8 +215,9 @@ app.post('/responses', requireAuth, async (req, res) => {
 });
 
 app.get('/history', requireAuth, async (req, res) => {
+  const browserToday = getBrowserToday(req);
   const weekOffset = Math.max(0, Number.parseInt(req.query.offset || '0', 10) || 0);
-  const windowEnd = shiftDate(todayString(), weekOffset * -7);
+  const windowEnd = shiftDate(browserToday, weekOffset * -7);
   const windowStart = shiftDate(windowEnd, -34);
   const trendWindow = {
     start: windowStart,
@@ -445,8 +448,7 @@ function questionDataFromBody(body) {
   };
 }
 
-async function getDashboardSummary(userId, activeQuestionCount) {
-  const today = todayString();
+async function getDashboardSummary(userId, activeQuestionCount, today) {
   const lastSevenDays = Array.from({ length: 7 }, (_, index) =>
     shiftDate(today, index - 6)
   );
@@ -475,12 +477,12 @@ async function getDashboardSummary(userId, activeQuestionCount) {
     answeredToday: responseCounts.get(today) || 0,
     lastSeven,
     missingDays: lastSeven.filter((day) => !day.complete).length,
-    streak: await getCurrentStreak(userId)
+    streak: await getCurrentStreak(userId, today)
   };
 }
 
-async function getCurrentStreak(userId) {
-  const since = dateForDb(shiftDate(todayString(), -364));
+async function getCurrentStreak(userId, today) {
+  const since = dateForDb(shiftDate(today, -364));
   const responses = await prisma.response.findMany({
     where: {
       userId,
@@ -493,7 +495,7 @@ async function getCurrentStreak(userId) {
     responses.map((response) => response.answerDate.toISOString().slice(0, 10))
   );
   let streak = 0;
-  let cursor = todayString();
+  let cursor = today;
 
   for (let index = 0; index < 365; index += 1) {
     if (!loggedDates.has(cursor)) {
@@ -608,6 +610,23 @@ function buildYesNoCalendar(question, responses, trendWindow) {
     answeredCount,
     yesRate
   };
+}
+
+function getBrowserToday(req) {
+  const cookies = parseCookies(req.headers.cookie || '');
+  return parseDateInput(cookies.ht_today || todayString());
+}
+
+function parseCookies(cookieHeader) {
+  return cookieHeader.split(';').reduce((cookies, part) => {
+    const [rawName, ...rawValue] = part.trim().split('=');
+    if (!rawName) {
+      return cookies;
+    }
+
+    cookies[rawName] = decodeURIComponent(rawValue.join('=') || '');
+    return cookies;
+  }, {});
 }
 
 function formatShortDate(value) {

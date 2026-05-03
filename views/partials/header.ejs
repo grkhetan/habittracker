@@ -4,6 +4,31 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title><%= title %> · Habit Tracker</title>
+    <script>
+      (() => {
+        const pad = (value) => String(value).padStart(2, '0');
+        const now = new Date();
+        const today = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+        const cookieMap = Object.fromEntries(
+          document.cookie
+            .split(';')
+            .map((item) => item.trim().split('='))
+            .filter(([name]) => name)
+        );
+        const previousToday = cookieMap.ht_today;
+        const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
+        const maxAge = 60 * 60 * 24 * 14;
+        document.cookie = `ht_today=${today}; Path=/; Max-Age=${maxAge}; SameSite=Lax`;
+        document.cookie = `ht_tz=${encodeURIComponent(timezone)}; Path=/; Max-Age=${maxAge}; SameSite=Lax`;
+
+        if (
+          previousToday !== today &&
+          (window.location.pathname === '/dashboard' || window.location.pathname === '/history')
+        ) {
+          window.location.replace(window.location.pathname + window.location.search);
+        }
+      })();
+    </script>
     <link rel="stylesheet" href="/styles.css">
   </head>
   <body>

@@ -8,7 +8,9 @@
   </head>
   <body>
     <header class="topbar">
-      <a class="brand" href="<%= user ? '/dashboard' : '/login' %>">Habit Tracker</a>
+      <a class="brand" href="<%= user ? '/dashboard' : '/login' %>" aria-label="Habit Tracker home">
+        <img src="/logo.svg" alt="Habit Tracker">
+      </a>
       <nav class="nav">
         <% if (user) { %>
           <a href="/dashboard" class="<%= path === '/dashboard' ? 'active' : '' %>">Daily log</a>

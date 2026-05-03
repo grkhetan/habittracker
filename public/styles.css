@@ -44,9 +44,20 @@ a:hover {
 }
 
 .brand {
+  align-items: center;
   color: var(--ink);
-  font-size: 18px;
-  font-weight: 800;
+  display: inline-flex;
+  flex: 0 0 auto;
+}
+
+.brand img {
+  display: block;
+  height: 40px;
+  width: auto;
+}
+
+.brand:hover {
+  text-decoration: none;
 }
 
 .nav {
@@ -652,6 +663,10 @@ button:disabled,
   .topbar {
     gap: 12px;
     padding: 14px 16px;
+  }
+
+  .brand img {
+    height: 36px;
   }
 
   .nav {

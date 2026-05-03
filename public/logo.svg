@@ -1,0 +1,9 @@
+<svg width="168" height="40" viewBox="0 0 168 40" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="logo-title">
+  <title id="logo-title">Habit Tracker</title>
+  <rect x="1" y="1" width="38" height="38" rx="9" fill="#23635A"/>
+  <path d="M28.6 10.5C20.2 10.8 13.3 16.9 12.4 24.8C17.7 25.5 26.7 24 30.1 14.9C30.6 13.6 30.2 12 28.6 10.5Z" fill="#F7F7F4"/>
+  <path d="M12.6 27.2C16.4 21.8 20.7 17.8 26.2 14.9" stroke="#23635A" stroke-width="2.1" stroke-linecap="round"/>
+  <path d="M11 22.7L16.8 28.5L30 15.3" stroke="#D78A3D" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="50" y="17" fill="#1F2933" font-family="Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="15" font-weight="800">Habit</text>
+  <text x="50" y="32" fill="#687586" font-family="Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="15" font-weight="800">Tracker</text>
+</svg>
